@@ -1,0 +1,9 @@
+{
+  "name": "LPN-VR Laparoskopik Parsiyel Nefrektomi Simülatörü",
+  "short_name": "LPN-VR",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d171e",
+  "theme_color": "#0d171e",
+  "ovr_package_name": "edu.sbu.lpnvr"
+}

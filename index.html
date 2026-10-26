@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LPN-VR Simülatör</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root { --bg: #0d171e; --panel: rgba(10,20,28,0.86); --line: #3fb6e8; --txt: #e6eef2; --mut: #8fb0bd; --good: #6dffb0; --warn: #ffd27a; --bad: #ff7a7a; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--txt); font: 14px/1.45 "Segoe UI", system-ui, sans-serif; }
+  #app canvas { display: block; }
+  .ov { position: fixed; z-index: 5; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; backdrop-filter: blur(4px); }
+  button { background: #1d3346; color: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; font: inherit; cursor: pointer; }
+  button:hover:not(:disabled) { background: #2f7fb0; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.big { font-size: 17px; padding: 12px 18px; }
+  button.on { background: #1f6f4a; }
+  h1 { font-size: 22px; margin: 0 0 6px; color: #6fd3ff; }
+  h2 { font-size: 18px; margin: 0 0 8px; color: #6fd3ff; }
+  kbd { background: #24323c; border: 1px solid #44606f; border-radius: 4px; padding: 0 5px; font-size: 12px; }
+
+  #menu { inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at center, rgba(13,23,30,0.55), rgba(13,23,30,0.92)); }
+  #menu .card { max-width: 760px; width: calc(100% - 32px); box-sizing: border-box; }
+  #menu .row { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 6px; }
+  #menu ul { margin: 6px 0; padding-left: 18px; color: var(--mut); }
+  .case { color: #dde; margin: 8px 0; }
+  .case b { color: var(--warn); }
+
+  #hud, #atlasUI, #homeBtn { display: none; }
+  body[data-mode="surgery"] #hud, body[data-mode="atlas"] #atlasUI { display: block; }
+  body[data-mode="surgery"] #homeBtn, body[data-mode="atlas"] #homeBtn { display: block; }
+  body[data-mode="menu"] #menu { display: grid; }
+  body:not([data-mode="menu"]) #menu { display: none; }
+  body[data-xr] #hud, body[data-xr] #menu, body[data-xr] #atlasUI { display: none !important; }
+
+  #step { left: 12px; top: 12px; width: min(440px, calc(100% - 24px)); }
+  #stepNum { color: var(--mut); font-size: 12px; }
+  #stepTitle { font-weight: 700; font-size: 16px; margin: 2px 0 6px; }
+  #stepText { color: #d6e2e8; }
+  #stepTools { color: var(--warn); margin-top: 6px; font-weight: 600; }
+  .bar { height: 6px; background: #233; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  #stepProg { height: 100%; width: 0; background: #3fd08a; transition: width .2s; }
+  #metrics { right: 12px; top: 12px; min-width: 190px; }
+  #metrics div { display: flex; justify-content: space-between; gap: 16px; }
+  #metrics span:last-child { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .warn { color: var(--warn); } .bad { color: var(--bad); }
+  #tools { left: 50%; transform: translateX(-50%); bottom: 12px; display: flex; gap: 10px; }
+  #tools .card { padding: 8px 12px; }
+  #tools .active { border-color: var(--good); box-shadow: 0 0 0 1px var(--good) inset; }
+  #help { left: 12px; bottom: 12px; font-size: 12px; color: var(--mut); max-width: 290px; }
+  #toasts { right: 12px; top: 120px; width: 340px; display: flex; flex-direction: column; gap: 6px; }
+  .toast { background: var(--panel); border-left: 4px solid var(--line); padding: 8px 10px; border-radius: 6px; animation: fade 6s forwards; }
+  .toast.good { border-color: var(--good); } .toast.warn { border-color: var(--warn); } .toast.bad { border-color: var(--bad); }
+  @keyframes fade { 0%, 80% { opacity: 1 } 100% { opacity: 0 } }
+  #vignette { inset: 0; pointer-events: none; background: radial-gradient(ellipse 75% 85% at center, transparent 60%, rgba(0,0,0,0.85) 100%); }
+  #usCanvas { right: 12px; bottom: 70px; width: 256px; height: 200px; border: 1px solid var(--line); border-radius: 6px; display: none; }
+  #report { display: none; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100% - 32px)); max-height: 85vh; overflow: auto; z-index: 9; }
+  #report table { width: 100%; border-collapse: collapse; } #report td { border-bottom: 1px solid #234; padding: 5px 4px; vertical-align: top; } #report td:first-child { color: var(--mut); width: 45%; }
+  #atlasUI { right: 12px; top: 12px; width: 250px; }
+  #atlasToggles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+  #homeBtn { left: 50%; top: 12px; transform: translateX(-50%); }
+  body[data-mode="surgery"] #homeBtn { top: auto; bottom: 64px; left: 12px; transform: none; }
+  @media (max-width: 760px) { #metrics, #toasts { display: none; } #tools { flex-direction: column; } #help { display: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body data-mode="menu">
+<div id="app"></div>
+
+<div id="menu" class="ov">
+  <div class="card">
+    <h1>LPN-VR · Laparoskopik Parsiyel Nefrektomi Simülatörü</h1>
+    <div class="case">
+      <b>Vaka:</b> 58 yaşında erkek, insidental sol böbrek alt pol anterior kitle — 3.0 cm, %60 ekzofitik (cT1a N0 M0),
+      R.E.N.A.L. <b>5a</b>, tek arter / tek ven, eGFR 88. Plan: transperitoneal LPN, sağ lateral dekübit 60°, 4 port.
+    </div>
+    <div class="row">
+      <button class="big" id="btnVR">🥽 VR'a gir (Quest 3S)</button>
+      <button class="big" id="btnMR">Karma gerçeklik (passthrough)</button>
+    </div>
+    <div class="row">
+      <button id="btnAtlas">Anatomi Atlası (masaüstü)</button>
+      <button id="btnSurgery">Ameliyat (masaüstü / fare)</button>
+    </div>
+    <h2 style="margin-top:12px">Adımlar</h2>
+    <ul>
+      <li>Toldt çizgisi insizyonu ve kolon medializasyonu → gonadal ven / üreter → hiler diseksiyon (VAP)</li>
+      <li>Gerota açılması, tümör çevresi defatlama → intraoperatif US → bulldog ile arter klempi (WIT)</li>
+      <li>Soğuk makasla eksizyon (2–5 mm sınır) → iç kat renorafi → kayan-klip dış kat → klemp kaldırma → endobag</li>
+    </ul>
+    <h2>Kontroller</h2>
+    <ul>
+      <li><b>VR:</b> kontrolcüler alet kollarıdır (trokar fulkrumu). Tetik: kullan · A/X: alet değiştir · Sol çubuk: kamera · Sağ çubuk: zoom · B: etiketler · Y: menü · iki çubuğa bas: hastayı ellerine göre konumla</li>
+      <li><b>Masaüstü:</b> fare = aktif alet ucu, sol tık/Boşluk = tetik, sağ tık veya <kbd>Q</kbd>/<kbd>E</kbd> = el, <kbd>1–8</kbd>/<kbd>Tab</kbd> = alet, tekerlek = derinlik, <kbd>W A S D</kbd> = kamera, <kbd>R</kbd>/<kbd>F</kbd> = zoom, <kbd>L</kbd> etiket, <kbd>G</kbd> rehber, <kbd>O</kbd> ameliyathane görünümü, <kbd>N</kbd> adımı atla</li>
+    </ul>
+    <p style="color:var(--mut);font-size:12px;margin-bottom:0">Eğitim amaçlı prosedürel model; klinik karar veya hasta-spesifik planlama için kullanılmamalıdır.</p>
+  </div>
+</div>
+
+<div id="hud">
+  <div id="vignette" class="ov"></div>
+  <div id="step" class="ov card">
+    <div id="stepNum"></div><div id="stepTitle"></div><div id="stepText"></div><div id="stepTools"></div>
+    <div class="bar"><div id="stepProg"></div></div>
+  </div>
+  <div id="metrics" class="ov card">
+    <div><span>Süre</span><span id="mTime">00:00</span></div>
+    <div><span>WIT</span><span id="mWit">—</span></div>
+    <div><span>Kan kaybı</span><span id="mBlood">0 ml</span></div>
+  </div>
+  <div id="toasts" class="ov"></div>
+  <div id="tools" class="ov"><div id="tool-left" class="card"></div><div id="tool-right" class="card"></div></div>
+  <div id="help" class="ov card">Sol tık: tetik · Sağ tık: el değiştir · 1–8: alet · Tekerlek: derinlik · WASD/RF: kamera · L/G/O/N</div>
+</div>
+<canvas id="usCanvas" class="ov" width="256" height="200"></canvas>
+<div id="atlasUI" class="ov card">
+  <h2>Anatomi Atlası</h2>
+  <div style="color:var(--mut);font-size:12px">Sürükle: döndür · Tekerlek: yakınlaş · Sağ sürükle: kaydır</div>
+  <div id="atlasToggles">
+    <button data-k="labels">Etiketler</button><button data-k="fat">Yağ / Gerota</button>
+    <button data-k="inner">Şeffaf böbrek</button><button data-k="bone">Kemikler</button>
+    <button data-k="gi">GİS organları</button><button data-k="muscle">Kaslar</button>
+  </div>
+  <button id="atlasHome">Ana menü</button>
+</div>
+<button id="homeBtn" class="ov">⟵ Ana menü</button>
+<div id="report" class="ov card"></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
