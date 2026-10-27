@@ -54,6 +54,10 @@ Hem-o-lok majör damarları durdurur.
 
 Kod: [src/anatomy.js](src/anatomy.js) (tüm ölçüler ve yorumlar), [src/room.js](src/room.js) (pozisyon, portlar).
 
+## Yerel Quest uygulaması (Unity 6)
+Aynı simülatörün Unity 6000.3 LTS + OpenXR ile yazılmış yerel APK sürümü [`unity/LPN-VR`](unity/LPN-VR) klasöründedir
+(anatomi, adımlar, skor birebir aynı). Kurulum ve Quest 3S'e yükleme: [unity/LPN-VR/README.md](unity/LPN-VR/README.md).
+
 ## Kontroller
 
 **Quest 3S (VR)**
