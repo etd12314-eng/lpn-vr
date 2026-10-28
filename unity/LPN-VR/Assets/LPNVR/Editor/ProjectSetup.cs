@@ -41,17 +41,7 @@ namespace LPNVR.EditorTools
         {
             try
             {
-                EnsureFolders();
-                CreateShaderRefs();
-                ConfigureURP();
-                ConfigureLayer();
-                ConfigurePlayer();
-                ConfigureXR(BuildTargetGroup.Android, new[] { "MetaQuestFeature", "OculusTouchControllerProfile", "MetaQuestTouchPlusControllerProfile", "MetaQuestTouchProControllerProfile" });
-                ConfigureXR(BuildTargetGroup.Standalone, new[] { "OculusTouchControllerProfile", "MetaQuestTouchPlusControllerProfile" });
-                CreateScene();
-                AssetDatabase.SaveAssets();
-                File.WriteAllText(DoneFlag, System.DateTime.Now.ToString("o"));
-                Debug.Log("LPN-VR: proje kurulumu tamamlandı (URP + OpenXR Meta Quest + Android).");
+                Configure();
                 bool needRestart = InputHandlerChanged;
                 string msg = "Kurulum tamamlandı.\n\n• Render: URP (MSAA 4x)\n• XR: OpenXR + Meta Quest desteği, Touch / Touch Plus kontrolcüler\n• Android: IL2CPP, ARM64, Vulkan, min API 32\n• Sahne: " + ScenePath +
                     "\n\nEditor'da başlık olmadan Play → masaüstü (fare/klavye) modu.\nQuest 3S: USB ile bağlayıp 'LPN-VR ▸ 2. Quest'e Derle ve Çalıştır'." +
@@ -68,6 +58,21 @@ namespace LPNVR.EditorTools
                 Debug.LogException(e);
                 EditorUtility.DisplayDialog("LPN-VR kurulum hatası", e.Message + "\n\nAyrıntı Console'da. Paketlerin içe aktarımı bitince 'LPN-VR ▸ 1. Projeyi Kur' menüsünü tekrar çalıştırın.", "Tamam");
             }
+        }
+
+        static void Configure()
+        {
+            EnsureFolders();
+            CreateShaderRefs();
+            ConfigureURP();
+            ConfigureLayer();
+            ConfigurePlayer();
+            ConfigureXR(BuildTargetGroup.Android, new[] { "MetaQuestFeature", "OculusTouchControllerProfile", "MetaQuestTouchPlusControllerProfile", "MetaQuestTouchProControllerProfile" });
+            ConfigureXR(BuildTargetGroup.Standalone, new[] { "OculusTouchControllerProfile", "MetaQuestTouchPlusControllerProfile" });
+            CreateScene();
+            AssetDatabase.SaveAssets();
+            File.WriteAllText(DoneFlag, System.DateTime.Now.ToString("o"));
+            Debug.Log("LPN-VR: proje kurulumu tamamlandı (URP + OpenXR Meta Quest + Android).");
         }
 
         static void EnsureFolders()
@@ -208,6 +213,27 @@ namespace LPNVR.EditorTools
             };
             var report = BuildPipeline.BuildPlayer(opts);
             Debug.Log($"LPN-VR derleme: {report.summary.result}, {report.summary.totalSize / (1024 * 1024)} MB, {report.summary.outputPath}");
+        }
+
+        // Komut satırı / CI: Unity -batchmode -buildTarget Android -executeMethod LPNVR.EditorTools.ProjectSetup.BuildCI [-customBuildPath yol.apk]
+        public static void BuildCI()
+        {
+            var args = System.Environment.GetCommandLineArgs();
+            int i = System.Array.IndexOf(args, "-customBuildPath");
+            string path = i >= 0 && i + 1 < args.Length ? args[i + 1] : "Builds/LPN-VR.apk";
+            if (!path.EndsWith(".apk")) path = Path.Combine(path, "LPN-VR.apk");
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
+            Configure();
+            EditorUserBuildSettings.buildAppBundle = false;
+            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = new[] { ScenePath },
+                locationPathName = path,
+                target = BuildTarget.Android,
+                options = BuildOptions.None,
+            });
+            Debug.Log($"LPN-VR derleme: {report.summary.result}, {report.summary.totalErrors} hata, {report.summary.outputPath}");
+            EditorApplication.Exit(report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
         }
     }
 }

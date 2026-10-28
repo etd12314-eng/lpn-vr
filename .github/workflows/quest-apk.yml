@@ -1,0 +1,62 @@
+# Unity projesini (unity/LPN-VR) Meta Quest 3S için APK olarak derler (GameCI).
+# Gerekli repo secret'ları: UNITY_LICENSE (Unity_lic.ulf içeriği), UNITY_EMAIL, UNITY_PASSWORD.
+name: Quest APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'unity/LPN-VR/**'
+      - '.github/workflows/quest-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Unity lisansı kontrolü
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          if [ -z "$UNITY_LICENSE" ]; then
+            echo "::error::UNITY_LICENSE secret'ı tanımlı değil (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+      - name: Disk alanı aç (Unity Android imajı ~15 GB)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          swap-storage: false
+
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: unity/LPN-VR/Library
+          key: Library-Android-${{ hashFiles('unity/LPN-VR/Packages/manifest.json', 'unity/LPN-VR/ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-Android-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity/LPN-VR
+          targetPlatform: Android
+          buildName: LPN-VR
+          buildMethod: LPNVR.EditorTools.ProjectSetup.BuildCI
+          androidExportType: androidPackage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LPN-VR-Quest3S-apk
+          path: build/Android/*.apk
+          if-no-files-found: error

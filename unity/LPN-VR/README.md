@@ -34,6 +34,20 @@ hata/komplikasyon mantığı, skor ve rapor web sürümüyle **birebir aynıdır
 **Editor'da test**: başlık takılı değilken *Play* → masaüstü modu (web sürümüyle aynı fare/klavye kontrolleri).
 Quest Link / Air Link ile bağlıysa Play doğrudan VR'da çalışır (Windows, OpenXR çalışma zamanı = Meta).
 
+## APK'yı GitHub'da derlemek (Unity kurmadan)
+
+`.github/workflows/quest-apk.yml` iş akışı projeyi GameCI ile Linux'ta derler ve APK'yı
+**Actions ▸ Quest APK ▸ son çalıştırma ▸ Artifacts ▸ LPN-VR-Quest3S-apk** altında verir.
+Bir kez şu repo secret'ları eklenmeli (*Settings ▸ Secrets and variables ▸ Actions*):
+
+| Secret | Değer |
+|---|---|
+| `UNITY_EMAIL`, `UNITY_PASSWORD` | Unity hesabı |
+| `UNITY_LICENSE` | Unity Hub'da Personal lisans etkinleştirildikten sonra `Unity_lic.ulf` dosyasının **içeriği** — Windows: `C:\ProgramData\Unity\Unity_lic.ulf`, macOS: `/Library/Application Support/Unity/Unity_lic.ulf`, Linux: `~/.local/share/unity3d/Unity/Unity_lic.ulf` |
+
+Ardından *Actions ▸ Quest APK ▸ Run workflow* (ya da `unity/LPN-VR` altına her push). Komut satırı eşdeğeri:
+`Unity -batchmode -projectPath unity/LPN-VR -buildTarget Android -executeMethod LPNVR.EditorTools.ProjectSetup.BuildCI -quit`.
+
 ## Kontroller
 
 **Quest 3S** — web sürümüyle aynı:
