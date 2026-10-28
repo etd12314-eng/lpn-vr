@@ -215,7 +215,16 @@ namespace LPNVR.EditorTools
             Debug.Log($"LPN-VR derleme: {report.summary.result}, {report.summary.totalSize / (1024 * 1024)} MB, {report.summary.outputPath}");
         }
 
-        // Komut satırı / CI: Unity -batchmode -buildTarget Android -executeMethod LPNVR.EditorTools.ProjectSetup.BuildCI [-customBuildPath yol.apk]
+        // Komut satırı / CI, iki ayrı Unity çalıştırması gerekir: giriş sistemi ayarı (activeInputHandler) ancak Editor yeniden
+        // açılınca derleme tanımlarına yansır; aynı oturumda derlenirse Editor ile oyuncu sınıf düzeni uyuşmaz.
+        //   1) Unity -batchmode -quit -buildTarget Android -executeMethod LPNVR.EditorTools.ProjectSetup.SetupCI
+        //   2) Unity -batchmode -quit -buildTarget Android -executeMethod LPNVR.EditorTools.ProjectSetup.BuildCI [-customBuildPath yol.apk]
+        public static void SetupCI()
+        {
+            Configure();
+            Debug.Log("LPN-VR: CI kurulumu tamam" + (InputHandlerChanged ? " (giriş sistemi ayarı değişti; derleme ayrı çalıştırmada yapılmalı)" : ""));
+        }
+
         public static void BuildCI()
         {
             var args = System.Environment.GetCommandLineArgs();
@@ -224,6 +233,7 @@ namespace LPNVR.EditorTools
             if (!path.EndsWith(".apk")) path = Path.Combine(path, "LPN-VR.apk");
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
             Configure();
+            if (InputHandlerChanged) { Debug.LogError("LPN-VR: giriş sistemi ayarı bu oturumda değişti; önce SetupCI ile ayrı bir çalıştırma yapın."); EditorApplication.Exit(1); return; }
             EditorUserBuildSettings.buildAppBundle = false;
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {

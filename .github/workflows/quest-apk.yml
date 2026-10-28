@@ -43,7 +43,23 @@ jobs:
           key: Library-Android-${{ hashFiles('unity/LPN-VR/Packages/manifest.json', 'unity/LPN-VR/ProjectSettings/ProjectVersion.txt') }}
           restore-keys: Library-Android-
 
-      - uses: game-ci/unity-builder@v4
+      # 1. çalıştırma: proje ayarları (giriş sistemi, XR, URP, sahne). Ayar değişiklikleri derleme tanımlarını
+      #    etkilediği için APK aynı Unity oturumunda değil, 2. çalıştırmada derlenir.
+      - name: Unity proje kurulumu
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: unity/LPN-VR
+          targetPlatform: Android
+          buildName: LPN-VR
+          buildMethod: LPNVR.EditorTools.ProjectSetup.SetupCI
+          androidExportType: androidPackage
+
+      - name: APK derle
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -54,6 +70,7 @@ jobs:
           buildName: LPN-VR
           buildMethod: LPNVR.EditorTools.ProjectSetup.BuildCI
           androidExportType: androidPackage
+          allowDirtyBuild: true
 
       - uses: actions/upload-artifact@v4
         with:
