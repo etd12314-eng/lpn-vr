@@ -39,26 +39,55 @@ namespace LPNVR
             haptic = A("haptic", "{Haptic}", InputActionType.PassThrough);
         }
 
-        // rig: izleme uzayından dünyaya
+        // Kaynak durumu (tanı paneli için)
+        public string source = "-";
+
+        // rig: izleme uzayından dünyaya. İki kaynak birlikte okunur: Input System eylemleri ve
+        // UnityEngine.XR.InputDevices (XR alt sistemi). Biri veri vermezse diğeri kullanılır.
         public void Poll(Transform rig)
         {
             if (simulated) return;
-            connected = pos.controls.Count > 0;
-            if (!connected) return;
-            position = rig.TransformPoint(pos.ReadValue<Vector3>());
-            rotation = rig.rotation * rot.ReadValue<Quaternion>();
-            if (aimPos.controls.Count > 0)
+            bool isOk = pos.controls.Count > 0;
+            var dev = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(hand == "left" ? UnityEngine.XR.XRNode.LeftHand : UnityEngine.XR.XRNode.RightHand);
+            bool xrOk = dev.isValid;
+            connected = isOk || xrOk;
+            if (!connected) { source = "yok"; triggerValue = 0; return; }
+
+            Vector3 lp = Vector3.zero; Quaternion lq = Quaternion.identity; bool havePose = false;
+            if (isOk) { lp = pos.ReadValue<Vector3>(); lq = rot.ReadValue<Quaternion>(); havePose = lq != new Quaternion(0, 0, 0, 0); }
+            if (!havePose && xrOk && dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.devicePosition, out var xp) && dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.deviceRotation, out var xq))
+            { lp = xp; lq = xq; havePose = true; }
+            if (lq == new Quaternion(0, 0, 0, 0)) lq = Quaternion.identity;
+            position = rig.TransformPoint(lp);
+            rotation = rig.rotation * lq;
+            if (isOk && aimPos.controls.Count > 0)
             {
                 aimPosition = rig.TransformPoint(aimPos.ReadValue<Vector3>());
-                aimRotation = rig.rotation * aimRot.ReadValue<Quaternion>();
+                var aq = aimRot.ReadValue<Quaternion>(); if (aq == new Quaternion(0, 0, 0, 0)) aq = Quaternion.identity;
+                aimRotation = rig.rotation * aq;
             }
             else { aimPosition = position; aimRotation = rotation * Quaternion.Euler(60, 0, 0); }
-            triggerValue = Mathf.Max(trigger.ReadValue<float>(), triggerPath.ReadValue<float>(), triggerBtn.IsPressed() ? 1 : 0);
-            gripPressed = grip.IsPressed();
-            primaryPressed = primary.IsPressed();
-            secondaryPressed = secondary.IsPressed();
-            stickPressed = stickClick.IsPressed();
-            stickValue = stick.ReadValue<Vector2>();
+
+            float tIS = isOk ? Mathf.Max(trigger.ReadValue<float>(), triggerPath.ReadValue<float>(), triggerBtn.IsPressed() ? 1 : 0) : 0;
+            float tXR = 0; bool gXR = false, aXR = false, bXR = false, sXR = false; Vector2 stXR = Vector2.zero;
+            if (xrOk)
+            {
+                dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.trigger, out tXR);
+                if (dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.triggerButton, out bool tb) && tb) tXR = Mathf.Max(tXR, 1);
+                dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.gripButton, out gXR);
+                dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.primaryButton, out aXR);
+                dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.secondaryButton, out bXR);
+                dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.primary2DAxisClick, out sXR);
+                dev.TryGetFeatureValue(UnityEngine.XR.CommonUsages.primary2DAxis, out stXR);
+            }
+            triggerValue = Mathf.Max(tIS, tXR);
+            gripPressed = (isOk && grip.IsPressed()) || gXR;
+            primaryPressed = (isOk && primary.IsPressed()) || aXR;
+            secondaryPressed = (isOk && secondary.IsPressed()) || bXR;
+            stickPressed = (isOk && stickClick.IsPressed()) || sXR;
+            var stIS = isOk ? stick.ReadValue<Vector2>() : Vector2.zero;
+            stickValue = stIS.sqrMagnitude >= stXR.sqrMagnitude ? stIS : stXR;
+            source = $"IS={(isOk ? tIS.ToString("F2") : "yok")} XR={(xrOk ? tXR.ToString("F2") : "yok")}";
         }
 
         // Yükselen kenar

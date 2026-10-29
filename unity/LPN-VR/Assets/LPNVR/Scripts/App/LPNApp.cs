@@ -689,7 +689,7 @@ namespace LPNVR
                     }
                     near = $"{Mathf.Sqrt(best) * 1000:F0}mm({bk})";
                 }
-                sb.Append($"{h.hand}: bağlı={h.connected} tetik={h.triggerValue:F2} alet={I.tool} aletTetik={I.trigger:F2} giriş={I.insertion * 100:F0}cm doku={near} görüş={IsVisible(I.tipWorld)}\n");
+                sb.Append($"{h.hand}: bağlı={h.connected} tetik={h.triggerValue:F2} [{h.source}] alet={I.tool} aletTetik={I.trigger:F2} giriş={I.insertion * 100:F0}cm doku={near} görüş={IsVisible(I.tipWorld)}\n");
             }
             if (proc != null && proc.Cur != null)
                 sb.Append($"adım={proc.Cur.id} hedef={proc.Cur.tg?.Count(t => t.done)}/{proc.Cur.tg?.Count} delik={A.meshes["latPer"].tissue?.holes.Count}  ses={(sfx && sfx.enabled)} {AudioSettings.outputSampleRate}Hz");
