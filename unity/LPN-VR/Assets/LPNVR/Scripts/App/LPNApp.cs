@@ -14,6 +14,7 @@ namespace LPNVR
     [RequireComponent(typeof(AudioSource))]
     public class LPNApp : MonoBehaviour, IProcHost
     {
+        public static float TestDt; // yalnız başlıksız test
         public const int LAYER_LAP = 6; // karın içi (yalnız laparoskop kamerası görür)
 
         // ---------------------------------------------------------------- durum
@@ -655,7 +656,7 @@ namespace LPNVR
 
         void Update()
         {
-            float dt = Mathf.Min(0.05f, Time.deltaTime);
+            float dt = TestDt > 0 ? TestDt : Mathf.Min(0.05f, Time.deltaTime);
             if (xrActive) XRUpdate(dt);
             else
             {

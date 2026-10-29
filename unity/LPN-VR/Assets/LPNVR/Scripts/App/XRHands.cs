@@ -11,6 +11,7 @@ namespace LPNVR
         public Vector3 position, aimPosition; public Quaternion rotation = Quaternion.identity, aimRotation = Quaternion.identity;
         public float triggerValue; public bool gripPressed, primaryPressed, secondaryPressed, stickPressed; public Vector2 stickValue;
         public bool connected;
+        public bool simulated; // test: alanlar dışarıdan doldurulur, Poll dokunmaz
         readonly System.Collections.Generic.Dictionary<string, bool> prev = new System.Collections.Generic.Dictionary<string, bool>();
 
         public XRHand(string hand)
@@ -38,6 +39,7 @@ namespace LPNVR
         // rig: izleme uzayından dünyaya
         public void Poll(Transform rig)
         {
+            if (simulated) return;
             connected = pos.controls.Count > 0;
             if (!connected) return;
             position = rig.TransformPoint(pos.ReadValue<Vector3>());

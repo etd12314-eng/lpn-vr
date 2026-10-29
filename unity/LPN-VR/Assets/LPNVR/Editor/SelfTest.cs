@@ -20,6 +20,9 @@ namespace LPNVR.EditorTools
         {
             try { Scenario(); }
             catch (System.Exception e) { Log("EXCEPTION " + e); }
+            try { ScenarioXR(); }
+            catch (System.Exception e) { Log("XR EXCEPTION " + e); }
+            LPNApp.TestDt = 0;
         }
 
         static void Scenario()
@@ -81,6 +84,50 @@ namespace LPNVR.EditorTools
                 var Tk = R.ports[k].obj.position; var dk = focusW - Tk;
                 Log($"port {k}: world={Tk} focusDist={dk.magnitude:F3}");
             }
+            Object.DestroyImmediate(go);
+        }
+
+        // Başlık yolunu (XRUpdate → Instrument → Procedure) benzetilmiş kontrolcülerle çalıştırır
+        static void ScenarioXR()
+        {
+            var go = new GameObject("LPN-VR-xrtest");
+            go.AddComponent<AudioSource>(); go.AddComponent<Sfx>();
+            var app = go.AddComponent<LPNApp>();
+            Call(app, "Start");
+            app.xrActive = true;
+            var hands = Get<XRHand[]>(app, "hands");
+            foreach (var h in hands) { h.simulated = true; h.connected = true; h.rotation = Quaternion.identity; h.aimRotation = Quaternion.identity; }
+            hands[0].position = hands[0].aimPosition = V(-0.2f, 1.05f, 0.25f);
+            hands[1].position = hands[1].aimPosition = V(0.2f, 1.05f, 0.25f);
+            Call(app, "SetMode", "surgery");
+            Call(app, "Calibrate");
+            LPNApp.TestDt = 0.02f;
+            for (int f = 0; f < 3; f++) Call(app, "Update");
+            var A = Get<Anatomy>(app, "A"); var R = Get<Room>(app, "R");
+            var proc = app.proc; var I = app.instr["right"];
+            var focusW = A.root.TransformPoint(V(0.075f, -0.01f, 0.015f));
+            Log($"XR neutral: mode={app.mode} vrMenuOpen={app.vrMenuOpen} tipL->focus={Vector3.Distance(app.instr["left"].tipWorld, focusW):F3} tipR->focus={Vector3.Distance(I.tipWorld, focusW):F3} insertionR={I.insertion:F3}");
+            // sağ el: tetik açıkken herhangi bir yerde (enerji → duman)
+            hands[1].triggerValue = 1;
+            Call(app, "Update");
+            Log($"XR trigger anywhere: instrTrigger={I.trigger} tool={I.tool}");
+            hands[1].triggerValue = 0; Call(app, "Update");
+            var lat = A.meshes["latPer"];
+            var T = R.ports["right"].obj.position;
+            int i = 0;
+            foreach (var tg in proc.Cur.tg.ToList())
+            {
+                var P = proc.PToW(tg.p);
+                var d = (P - T).N();
+                float o = Instrument.SHAFT + I.TipOff - Vector3.Distance(P, T);
+                hands[1].position = T - d * o;
+                hands[1].triggerValue = 1;
+                for (int f = 0; f < 10 && proc.stepIdx == 0; f++) Call(app, "Update");
+                hands[1].triggerValue = 0; Call(app, "Update");
+                if (i++ < 3) Log($"XR tg: tipErr={Vector3.Distance(I.tipWorld, P) * 1000:F1}mm holes={HoleCount(lat)} done={tg.done}");
+                if (proc.stepIdx != 0) break;
+            }
+            Log($"XR after: stepIdx={proc.stepIdx} holes={HoleCount(lat)}");
             Object.DestroyImmediate(go);
         }
 
