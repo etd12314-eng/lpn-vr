@@ -222,6 +222,7 @@ namespace LPNVR.EditorTools
         public static void SetupCI()
         {
             Configure();
+            SelfTest.Run();
             Debug.Log("LPN-VR: CI kurulumu tamam" + (InputHandlerChanged ? " (giriş sistemi ayarı değişti; derleme ayrı çalıştırmada yapılmalı)" : ""));
         }
 
