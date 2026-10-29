@@ -127,7 +127,8 @@ namespace LPNVR.EditorTools
                 if (i++ < 3) Log($"XR tg: tipErr={Vector3.Distance(I.tipWorld, P) * 1000:F1}mm holes={HoleCount(lat)} done={tg.done}");
                 if (proc.stepIdx != 0) break;
             }
-            Log($"XR after: stepIdx={proc.stepIdx} holes={HoleCount(lat)}");
+            Log($"XR after: stepIdx={proc.stepIdx} holes={HoleCount(lat)} lastErr={app.lastErr}");
+            Call(app, "Diag"); Log("XR diag: " + Get<VRPanel>(app, "diag").body.text.Replace("\n", " | "));
             Object.DestroyImmediate(go);
         }
 

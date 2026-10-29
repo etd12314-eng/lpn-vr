@@ -7,7 +7,7 @@ namespace LPNVR
     public class XRHand
     {
         public readonly string hand;
-        readonly InputAction pos, rot, aimPos, aimRot, trigger, grip, primary, secondary, stick, stickClick, haptic;
+        readonly InputAction pos, rot, aimPos, aimRot, trigger, triggerBtn, triggerPath, grip, primary, secondary, stick, stickClick, haptic;
         public Vector3 position, aimPosition; public Quaternion rotation = Quaternion.identity, aimRotation = Quaternion.identity;
         public float triggerValue; public bool gripPressed, primaryPressed, secondaryPressed, stickPressed; public Vector2 stickValue;
         public bool connected;
@@ -28,6 +28,9 @@ namespace LPNVR
             aimPos = A("aimPos", "pointerPosition", ctrl: "Vector3");
             aimRot = A("aimRot", "pointerRotation", ctrl: "Quaternion");
             trigger = A("trigger", "{Trigger}", ctrl: "Axis");
+            // yedek bağlamalar: bazı profillerde/çalışma zamanlarında kullanım eşlemesi eksik olabilir
+            triggerBtn = A("triggerBtn", "{TriggerButton}", InputActionType.Button);
+            triggerPath = A("triggerPath", "trigger", ctrl: "Axis");
             grip = A("grip", "{GripButton}", InputActionType.Button);
             primary = A("primary", "{PrimaryButton}", InputActionType.Button);
             secondary = A("secondary", "{SecondaryButton}", InputActionType.Button);
@@ -50,7 +53,7 @@ namespace LPNVR
                 aimRotation = rig.rotation * aimRot.ReadValue<Quaternion>();
             }
             else { aimPosition = position; aimRotation = rotation * Quaternion.Euler(60, 0, 0); }
-            triggerValue = trigger.ReadValue<float>();
+            triggerValue = Mathf.Max(trigger.ReadValue<float>(), triggerPath.ReadValue<float>(), triggerBtn.IsPressed() ? 1 : 0);
             gripPressed = grip.IsPressed();
             primaryPressed = primary.IsPressed();
             secondaryPressed = secondary.IsPressed();

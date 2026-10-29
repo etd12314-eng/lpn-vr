@@ -33,6 +33,7 @@ namespace LPNVR
         Camera mainCam, lapCam;
         RenderTexture rt;
         LabelSet surgLabels, atlasLabels;
+        VRPanel diag; float diagT, diagLogT; public string lastErr = "-";
         Part usPlane;
         Texture2D usTex; Color32[] usPx;
         const int US_W = 256, US_H = 200;
@@ -136,6 +137,12 @@ namespace LPNVR
             usPlane = Part.Make("usPIP", Quad(0.26f, 0.2f), usMat, monUnflip);
             usPlane.transform.localPosition = V(0.33f, -0.15f, -0.031f);
             usPlane.gameObject.SetActive(false);
+            // Tanı satırı (monitörün altında): giriş/alet/doku durumu — cihazda sorun ayıklamak için
+            diag = new VRPanel("diag", monUnflip, 0.96f, 0.17f, 1400);
+            diag.go.transform.localPosition = V(0, -0.39f, -0.03f);
+            diag.title.gameObject.SetActive(false);
+            VRPanel.Place(diag.body.rectTransform, 24, 10, diag.W - 48, diag.H - 20);
+            diag.body.fontSize = 26;
 
             // UI
             var infoUnflip = Room.CounterFlip(R.panelAnchor);
@@ -655,6 +662,43 @@ namespace LPNVR
         readonly Dictionary<string, float> prevTrig = new Dictionary<string, float> { ["left"] = 0, ["right"] = 0 };
 
         void Update()
+        {
+            try { Tick(); }
+            catch (System.Exception e) { lastErr = e.GetType().Name + ": " + e.Message; Debug.LogException(e); }
+            try { Diag(); } catch (System.Exception e) { Debug.LogException(e); }
+        }
+
+        void Diag()
+        {
+            diagT += Time.unscaledDeltaTime; diagLogT += Time.unscaledDeltaTime;
+            if (diagT < 0.25f) return; diagT = 0;
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"mod={mode} xr={xrActive} menü={vrMenuOpen} rapor={ui.lastReport != null}  hata: {lastErr}\n");
+            foreach (var h in hands)
+            {
+                var I = instr[h.hand];
+                string near = "-";
+                if (A != null && mode == "surgery")
+                {
+                    float best = float.MaxValue; string bk = "";
+                    foreach (var key in new[] { "latPer", "meso", "fatPeri", "fatHilar", "fatRetro" })
+                    {
+                        var mm = A.meshes[key]; if (!mm.Visible) continue;
+                        var lp = mm.transform.InverseTransformPoint(I.tipWorld);
+                        for (int i = 0; i < mm.verts.Length; i += 2) { float d = (mm.verts[i] - lp).sqrMagnitude; if (d < best) { best = d; bk = key; } }
+                    }
+                    near = $"{Mathf.Sqrt(best) * 1000:F0}mm({bk})";
+                }
+                sb.Append($"{h.hand}: bağlı={h.connected} tetik={h.triggerValue:F2} alet={I.tool} aletTetik={I.trigger:F2} giriş={I.insertion * 100:F0}cm doku={near} görüş={IsVisible(I.tipWorld)}\n");
+            }
+            if (proc != null && proc.Cur != null)
+                sb.Append($"adım={proc.Cur.id} hedef={proc.Cur.tg?.Count(t => t.done)}/{proc.Cur.tg?.Count} delik={A.meshes["latPer"].tissue?.holes.Count}  ses={(sfx && sfx.enabled)} {AudioSettings.outputSampleRate}Hz");
+            diag.body.text = sb.ToString();
+            diag.go.SetActive(mode == "surgery");
+            if (diagLogT > 2f) { diagLogT = 0; Debug.Log("LPNDIAG " + sb.ToString().Replace("\n", " | ")); }
+        }
+
+        void Tick()
         {
             float dt = TestDt > 0 ? TestDt : Mathf.Min(0.05f, Time.deltaTime);
             if (xrActive) XRUpdate(dt);
