@@ -106,7 +106,8 @@ void LpnLight(float3 posWS, out float3 L, out float atten)
     float3 toL = _LpnLightPos.xyz - posWS;
     float d = length(toL);
     L = toL / max(d, 1e-5);
-    float falloff = 1.0 / max(pow(d, _LpnSpot.w), 0.01);
+    // skop ucuna çok yakın dokular beyaza patlamasın: mesafeye 3.5 cm ofset (ışık kaynağı nokta değil, halka)
+    float falloff = 1.0 / max(pow(d + 0.035, _LpnSpot.w), 0.01);
     if (_LpnSpot.x > 0) { float r = saturate(1.0 - pow(d / _LpnSpot.x, 4.0)); falloff *= r * r; }
     atten = falloff * smoothstep(_LpnSpot.y, _LpnSpot.z, dot(-L, normalize(_LpnLightDir.xyz)));
 }

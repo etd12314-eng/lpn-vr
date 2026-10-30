@@ -43,7 +43,7 @@ namespace LPNVR
         // laparoskop kamera durumu (hasta-yerel)
         Vector3 camTarget = V(0.1f, -0.02f, 0.02f), camOffset;
         float camDist = 0.11f;
-        const float LAP_EXPOSURE = 1.0f; // laparoskop kamerasının otomatik pozlaması
+        const float LAP_EXPOSURE = 1.25f; // laparoskop kamerasının otomatik pozlaması
 
         // ---------------------------------------------------------------- IProcHost
         public Camera LapCam => lapCam;

@@ -63,7 +63,7 @@ namespace LPNVR.EditorTools
             // 2) kolon medialize, Gerota / perirenal yağ
             proc.st.colonAnim = true;
             for (int i = 0; i < 200; i++) proc.Update(0.02f, new ToolState[0]);
-            Lap("02_gerota", V(0.09f, -0.01f, 0.03f), 0.12f);
+            Lap("02_gerota", V(0.12f, -0.02f, 0.03f), 0.13f);
             // 3) hilus (yağ kaldırılmış)
             A.meshes["fatHilar"].gameObject.SetActive(false);
             Lap("03_hilum", V(0.05f, 0.002f, 0.028f), 0.09f);
@@ -82,6 +82,12 @@ namespace LPNVR.EditorTools
             mainCam.transform.position = new Vector3(0, 1.6f, 0);
             mainCam.transform.LookAt(new Vector3(0, 1.0f, 0.55f));
             Render(mainCam, "07_head", 1280, 720);
+            // uzaktan genel bakış (oda tanısı)
+            mainCam.transform.position = new Vector3(1.8f, 2.6f, -1.6f);
+            mainCam.transform.LookAt(A.root.position);
+            Render(mainCam, "08_far", 1280, 720);
+            foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None).Where(r => r.gameObject.layer == 0 && r.enabled && r.gameObject.activeInHierarchy).OrderByDescending(r => r.bounds.size.magnitude).Take(8))
+                Log($"oda nesnesi {r.name} merkez={r.bounds.center} boyut={r.bounds.size} mat={r.sharedMaterial?.shader?.name}");
             Log($"mainCam near={mainCam.nearClipPlane} far={mainCam.farClipPlane} mask={mainCam.cullingMask} R.root={Get<Room>(app, "R").root.position} patient={A.root.position}");
             Object.DestroyImmediate(go);
             Log("tamam: " + string.Join(", ", Directory.GetFiles(Dir).Select(Path.GetFileName)));

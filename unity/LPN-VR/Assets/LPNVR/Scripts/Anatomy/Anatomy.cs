@@ -419,7 +419,7 @@ namespace LPNVR
                 float w0 = (1 - uu) * (1 - uu), w1 = 2 * uu * (1 - uu), w2 = uu * uu;
                 return V(w0 * 0.124f + w1 * 0.15f + w2 * 0.153f, y, w0 * 0.03f + w1 * 0.01f + w2 * 0.05f + 0.0015f * Mathf.Sin(y * 90));
             }).ComputeNormals();
-            var latPer = Part.Make("latPeritoneum", lg, Mats.Tissue(new MatOpts { tex = tex["peritoneum"], color = 0xf4cdb8, roughness = 0.25f, side = Side.Double }, true, 0.01f), root);
+            var latPer = Part.Make("latPeritoneum", lg, Mats.Tissue(new MatOpts { tex = tex["peritoneum"], color = 0xfbe4da, roughness = 0.25f, side = Side.Double }, true, 0.01f), root);
             Add(latPer, "gi"); meshes["latPer"] = latPer;
             toldt = new List<Vector3>();
             for (int i = 0; i <= 10; i++) { float y = 0.065f - i * 0.019f; toldt.Add(V(0.1411f, y, 0.0244f + 0.0015f * Mathf.Sin(y * 90))); } // oluk üzerinde u=0.4

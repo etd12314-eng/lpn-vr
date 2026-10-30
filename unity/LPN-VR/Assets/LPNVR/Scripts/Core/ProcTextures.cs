@@ -104,8 +104,8 @@ namespace LPNVR
             switch (kind)
             {
                 case "fat":
-                    c.Fill(H(0xe3b552));
-                    for (int i = 0; i < 260; i++) c.Blob(R() * size, R() * size, 12 + R() * 26, C(250, 215 + (int)(R() * 30), 120 + (int)(R() * 50), 0.55f));
+                    c.Fill(H(0xd99a26));
+                    for (int i = 0; i < 260; i++) c.Blob(R() * size, R() * size, 12 + R() * 26, C(245, 190 + (int)(R() * 35), 70 + (int)(R() * 40), 0.6f));
                     c.Vessels(7, 260, 2.2f, C(185, 60, 40, 0.55f));
                     for (int i = 0; i < 60; i++) c.Blob(R() * size, R() * size, 3 + R() * 6, C(255, 240, 190, 0.5f)); // ışık yansıtan lobül tepeleri
                     break;
@@ -115,9 +115,10 @@ namespace LPNVR
                     c.Vessels(10, 160, 1.4f, C(95, 22, 22, 0.45f));
                     break;
                 case "tumor":
-                    c.Fill(H(0xd9a23a));
-                    for (int i = 0; i < 160; i++) c.Blob(R() * size, R() * size, 10 + R() * 40, C(230 + (int)(R() * 25), 170 + (int)(R() * 60), 60, 0.5f));
-                    for (int i = 0; i < 25; i++) c.Blob(R() * size, R() * size, 8 + R() * 22, C(140, 30, 25, 0.55f)); // hemorajik odaklar
+                    c.Fill(H(0xcf8a2a));
+                    for (int i = 0; i < 160; i++) c.Blob(R() * size, R() * size, 10 + R() * 40, C(235 + (int)(R() * 20), 160 + (int)(R() * 50), 40, 0.5f));
+                    for (int i = 0; i < 25; i++) c.Blob(R() * size, R() * size, 8 + R() * 22, C(130, 28, 22, 0.6f)); // hemorajik odaklar
+                    c.Vessels(8, 120, 1.6f, C(150, 30, 25, 0.55f)); // yüzey neovaskülaritesi
                     break;
                 case "colon":
                     c.Fill(H(0xc98a78));
@@ -135,13 +136,13 @@ namespace LPNVR
                     c.Fill(H(0x9c3a33));
                     for (int i = 0; i < size; i += 3)
                     {
-                        var col = C(120 + (int)(R() * 60), 40, 40, 0.4f);
+                        var col = C(135 + (int)(R() * 30), 45, 42, 0.25f);
                         c.Row(i, 1 + (int)(R() * 2), col);
                     }
                     break;
                 case "vein":
-                    c.Fill(H(0x4c3a78));
-                    for (int i = 0; i < 120; i++) c.Blob(R() * size, R() * size, 10 + R() * 30, C(110, 80, 150, 0.4f));
+                    c.Fill(H(0x34285a));
+                    for (int i = 0; i < 120; i++) c.Blob(R() * size, R() * size, 10 + R() * 30, C(70, 52, 110, 0.4f));
                     break;
                 case "artery":
                     c.Fill(H(0xc9867a));
