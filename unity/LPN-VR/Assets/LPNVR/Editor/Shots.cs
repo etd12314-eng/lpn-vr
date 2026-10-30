@@ -95,16 +95,16 @@ namespace LPNVR.EditorTools
             foreach (var cv in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
             {
                 var rt = (RectTransform)cv.transform; var cs = new Vector3[4]; rt.GetWorldCorners(cs);
-                Log($"canvas {cv.name} yol={Path(cv.transform)} aktif={cv.gameObject.activeInHierarchy} mod={cv.renderMode} katman={cv.gameObject.layer} köşe0={cs[0]} köşe2={cs[2]}");
+                Log($"canvas {cv.name} yol={TPath(cv.transform)} aktif={cv.gameObject.activeInHierarchy} mod={cv.renderMode} katman={cv.gameObject.layer} köşe0={cs[0]} köşe2={cs[2]}");
             }
             foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None).Where(r => r.gameObject.activeInHierarchy && r.enabled && r.bounds.size.magnitude > 1.2f))
-                Log($"büyük {r.GetType().Name} {Path(r.transform)} katman={r.gameObject.layer} merkez={r.bounds.center} boyut={r.bounds.size}");
+                Log($"büyük {r.GetType().Name} {TPath(r.transform)} katman={r.gameObject.layer} merkez={r.bounds.center} boyut={r.bounds.size}");
             Log($"mainCam near={mainCam.nearClipPlane} far={mainCam.farClipPlane} mask={mainCam.cullingMask} R.root={Get<Room>(app, "R").root.position} patient={A.root.position}");
             Object.DestroyImmediate(go);
             Log("tamam: " + string.Join(", ", Directory.GetFiles(Dir).Select(Path.GetFileName)));
         }
 
-        static string Path(Transform t) => t.parent ? Path(t.parent) + "/" + t.name : t.name;
+        static string TPath(Transform t) => t.parent ? TPath(t.parent) + "/" + t.name : t.name;
 
         static void Render(Camera cam, string name, int w, int h)
         {
