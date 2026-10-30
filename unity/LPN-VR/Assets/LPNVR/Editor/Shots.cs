@@ -73,6 +73,8 @@ namespace LPNVR.EditorTools
             Lap("04_tumor", tumP, 0.08f);
             Lap("05_kidney", V(0.085f, -0.01f, 0.02f), 0.13f);
             // 6) ameliyathane (baş hizasından)
+            // masaüstü HUD'u (Editor'da dünya-uzayı dikdörtgeni gibi çizilir) ekran görüntülerinden çıkar
+            Call(Get<UIManager>(app, "ui"), "HudVisible", false);
             // masaüstü "O" görünümüyle aynı yörünge kamerası
             var orT = A.root.TransformPoint(V(0.06f, -0.02f, 0.1f));
             mainCam.transform.position = orT + new Vector3(0, 0.5f, -0.9f);

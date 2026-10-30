@@ -143,8 +143,10 @@ float3 LpnShadeTissue(float3 albedo, float metallic, float roughness, float3 N, 
 
     float3 hemi = lerp(_LpnGround.rgb, _LpnSky.rgb, 0.5 * N.y + 0.5) * ao;
     // ıslak film altındaki difüz hafifçe azalır (filmden yansıyan pay)
+    // ortam yansıması (çevre haritası yerine yarıküre ışığı): metaller ortam ışığında kararmasın
+    float3 envSpec = hemi * f0 * (1.0 - 0.7 * roughness) * 0.9;
     float3 col = (diff * lightC + hemi) * diffuseColor / LPN_PI * (1.0 - 0.04 * wet)
-               + lightC * (spec + wetSpec);
+               + lightC * (spec + wetSpec) + envSpec;
     return col;
 }
 

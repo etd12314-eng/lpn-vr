@@ -229,7 +229,7 @@ namespace LPNVR
                 Shader.SetGlobalVector("_LpnLightColor", Hex(0xfff6ea).linear * 1.7f);
                 Shader.SetGlobalVector("_LpnSpot", Vector4.zero);
                 Shader.SetGlobalVector("_LpnSky", Hex(0xf1f5f7).linear * 1.15f);
-                Shader.SetGlobalVector("_LpnGround", Hex(0x6b7276).linear * 0.9f);
+                Shader.SetGlobalVector("_LpnGround", Hex(0xb4babd).linear * 0.85f); // açık zeminden sekme
                 Shader.SetGlobalFloat("_LpnExposure", 1.0f);
             }
         }

@@ -138,7 +138,7 @@ namespace LPNVR
             ["floor"] = new TissueLook(0.55f, 0.16f, 0.35f, 0.25f, Color.black),
             ["panel"] = new TissueLook(0.25f, 0.25f, 0.5f, 0.3f, Color.black),
             ["ceiling"] = new TissueLook(0f, 0.3f, 0.4f, 0.2f, Color.black),
-            ["drape"] = new TissueLook(0f, 0.3f, 1.6f, 0.45f, new Color(0.15f, 0.12f, 0.1f)),
+            ["drape"] = new TissueLook(0f, 0.3f, 0.8f, 0.3f, new Color(0.15f, 0.12f, 0.1f)),
             ["steel"] = new TissueLook(0.3f, 0.12f, 0.25f, 0.1f, Color.black),
             ["mattress"] = new TissueLook(0.35f, 0.2f, 0.6f, 0.2f, Color.black),
         };
