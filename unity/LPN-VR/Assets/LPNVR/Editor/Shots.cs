@@ -86,6 +86,18 @@ namespace LPNVR.EditorTools
             mainCam.transform.position = new Vector3(1.8f, 2.6f, -1.6f);
             mainCam.transform.LookAt(A.root.position);
             Render(mainCam, "08_far", 1280, 720);
+            mainCam.transform.position = new Vector3(0.01f, 5f, 0.5f);
+            mainCam.transform.LookAt(new Vector3(0, 0, 0.5f));
+            Render(mainCam, "10_top", 1280, 720);
+            mainCam.transform.position = new Vector3(2.5f, 1.3f, 0.5f);
+            mainCam.transform.LookAt(new Vector3(0, 1.0f, 0.5f));
+            Render(mainCam, "11_side", 1280, 720);
+            foreach (var n in new[] { "tableTop", "skin", "torsoDrape", "lamp", "frame" })
+            {
+                var g = GameObject.Find(n);
+                var rr = g ? g.GetComponent<Renderer>() : null;
+                Log(rr ? $"nesne {n}: aktif={g.activeInHierarchy} katman={g.layer} merkez={rr.bounds.center} boyut={rr.bounds.size} kuyruk={rr.sharedMaterial.renderQueue} renk={rr.sharedMaterial.GetVector("_Color")} cull={rr.sharedMaterial.GetFloat("_Cull")} det={rr.localToWorldMatrix.determinant:F3}" : $"nesne {n}: yok");
+            }
             var top = GameObject.Find("tableTop");
             if (top) Log($"tableTop viewport={mainCam.WorldToViewportPoint(top.transform.position)} camPos={mainCam.transform.position} camFwd={mainCam.transform.forward} parent={mainCam.transform.parent?.name} stereo={mainCam.stereoEnabled} targetEye={mainCam.stereoTargetEye}");
             // aynı pozdan laparoskop kamerasıyla (ana kamera ayarı mı, sahne mi?)
