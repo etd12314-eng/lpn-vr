@@ -357,7 +357,7 @@ namespace LPNVR
             midFat.transform.localPosition = V(-0.006f, -0.04f, 0.034f); Add(midFat, "fat"); meshes["midFat"] = midFat;
 
             // ------------------------------------------------------------------ GİS organları
-            var spleen = Mesh("spleen", Geo.Ellipsoid(0.035f, 0.06f, 0.02f, 40, 0.04f), Std(0x6a2238, 0.3f, tex["organ"]));
+            var spleen = Mesh("spleen", Geo.Ellipsoid(0.035f, 0.06f, 0.02f, 40, 0.04f), Std(0xa0405a, 0.3f, tex["organ"]));
             spleen.transform.localPosition = V(0.103f, 0.1f, -0.012f); spleen.transform.localRotation = EulerXYZ(0.5f, 0.6f, -0.35f);
             Add(spleen, "gi"); Label("Dalak (Splen)", V(0.11f, 0.11f, 0.012f), "gi");
             panc = Mesh("panc", Geo.TaperTube(L(V(-0.035f, -0.005f, 0.075f), V(0.0f, 0.02f, 0.085f), V(0.04f, 0.04f, 0.066f), V(0.075f, 0.065f, 0.036f), V(0.09f, 0.08f, 0.018f)), t => 0.014f - 0.005f * t, 48, 14), Std(0xf6d6a8, 0.55f, tex["fat"]));
@@ -419,7 +419,7 @@ namespace LPNVR
                 float w0 = (1 - uu) * (1 - uu), w1 = 2 * uu * (1 - uu), w2 = uu * uu;
                 return V(w0 * 0.124f + w1 * 0.15f + w2 * 0.153f, y, w0 * 0.03f + w1 * 0.01f + w2 * 0.05f + 0.0015f * Mathf.Sin(y * 90));
             }).ComputeNormals();
-            var latPer = Part.Make("latPeritoneum", lg, Mats.Tissue(new MatOpts { tex = tex["peritoneum"], color = 0xffeae0, roughness = 0.25f, side = Side.Double }, true, 0.01f), root);
+            var latPer = Part.Make("latPeritoneum", lg, Mats.Tissue(new MatOpts { tex = tex["peritoneum"], color = 0xf4cdb8, roughness = 0.25f, side = Side.Double }, true, 0.01f), root);
             Add(latPer, "gi"); meshes["latPer"] = latPer;
             toldt = new List<Vector3>();
             for (int i = 0; i <= 10; i++) { float y = 0.065f - i * 0.019f; toldt.Add(V(0.1411f, y, 0.0244f + 0.0015f * Mathf.Sin(y * 90))); } // oluk üzerinde u=0.4

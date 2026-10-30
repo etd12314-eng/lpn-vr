@@ -124,15 +124,15 @@ namespace LPNVR
         public static readonly Dictionary<string, TissueLook> Looks = new Dictionary<string, TissueLook>
         {
             ["fat"] = new TissueLook(0.9f, 0.10f, 2.2f, 0.35f, new Color(0.60f, 0.42f, 0.18f)),
-            ["kidney"] = new TissueLook(0.85f, 0.09f, 0.7f, 0.15f, new Color(0.55f, 0.22f, 0.16f)),
+            ["kidney"] = new TissueLook(0.85f, 0.09f, 0.5f, 0.15f, new Color(0.55f, 0.22f, 0.16f)),
             ["tumor"] = new TissueLook(0.6f, 0.14f, 2.0f, 0.30f, new Color(0.50f, 0.32f, 0.14f)),
             ["colon"] = new TissueLook(0.95f, 0.08f, 1.4f, 0.25f, new Color(0.50f, 0.28f, 0.22f)),
-            ["peritoneum"] = new TissueLook(1.0f, 0.06f, 0.9f, 0.15f, new Color(0.45f, 0.30f, 0.22f)),
+            ["peritoneum"] = new TissueLook(1.0f, 0.06f, 0.45f, 0.15f, new Color(0.45f, 0.30f, 0.22f)),
             ["muscle"] = new TissueLook(0.6f, 0.14f, 1.6f, 0.30f, new Color(0.45f, 0.18f, 0.14f)),
             ["vein"] = new TissueLook(0.9f, 0.07f, 0.35f, 0.10f, new Color(0.30f, 0.18f, 0.32f)),
             ["artery"] = new TissueLook(0.8f, 0.09f, 0.5f, 0.10f, new Color(0.50f, 0.28f, 0.22f)),
             ["organ"] = new TissueLook(0.85f, 0.09f, 0.7f, 0.15f, new Color(0.50f, 0.24f, 0.20f)),
-            ["wall"] = new TissueLook(0.8f, 0.10f, 1.0f, 0.25f, new Color(0.50f, 0.28f, 0.22f)),
+            ["wall"] = new TissueLook(0.8f, 0.10f, 0.4f, 0.25f, new Color(0.50f, 0.28f, 0.22f)),
         };
 
         static Texture2D _black;

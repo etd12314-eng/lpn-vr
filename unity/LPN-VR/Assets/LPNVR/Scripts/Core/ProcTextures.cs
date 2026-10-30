@@ -64,6 +64,28 @@ namespace LPNVR
                 }
             }
 
+            // Kıvrımlı, incelen ve dallanan damar (sabit adım, açısı yavaşça sapar) — Walk'un kırık çizgileri yerine
+            public void Vessel(float x, float y, float ang, float len, float w, Color c, int depth = 0)
+            {
+                float step = 2.5f, curv = 0;
+                int n = Mathf.CeilToInt(len / step);
+                for (int k = 0; k < n; k++)
+                {
+                    curv = curv * 0.9f + (U.Rand() - 0.5f) * 0.12f;
+                    ang += curv;
+                    float t = (float)k / n, ww = Mathf.Max(0.6f, w * (1 - 0.7f * t));
+                    float nx = x + Mathf.Cos(ang) * step, ny = y + Mathf.Sin(ang) * step;
+                    Line(x, y, nx, ny, ww, c);
+                    x = nx; y = ny;
+                    if (depth < 2 && U.Rand() < 0.035f)
+                        Vessel(x, y, ang + (U.Rand() < 0.5f ? 1 : -1) * (0.5f + U.Rand() * 0.6f), len * (1 - t) * 0.6f, ww * 0.7f, c, depth + 1);
+                }
+            }
+            public void Vessels(int count, float len, float w, Color c)
+            {
+                for (int i = 0; i < count; i++) Vessel(U.Rand() * S, U.Rand() * S, U.Rand() * Mathf.PI * 2, len * (0.6f + U.Rand() * 0.8f), w, c);
+            }
+
             public void Row(int y, int h, Color c)
             {
                 for (int yy = y; yy < Mathf.Min(S, y + h); yy++)
@@ -84,12 +106,13 @@ namespace LPNVR
                 case "fat":
                     c.Fill(H(0xe3b552));
                     for (int i = 0; i < 260; i++) c.Blob(R() * size, R() * size, 12 + R() * 26, C(250, 215 + (int)(R() * 30), 120 + (int)(R() * 50), 0.55f));
-                    for (int i = 0; i < 18; i++) c.Walk(8, () => J(60, 60), 1.2f, C(170, 70, 40, 0.35f));
+                    c.Vessels(7, 260, 2.2f, C(185, 60, 40, 0.55f));
+                    for (int i = 0; i < 60; i++) c.Blob(R() * size, R() * size, 3 + R() * 6, C(255, 240, 190, 0.5f)); // ışık yansıtan lobül tepeleri
                     break;
                 case "kidney":
                     c.Fill(H(0x7a2b22));
                     for (int i = 0; i < 400; i++) c.Blob(R() * size, R() * size, 6 + R() * 20, C(140 + (int)(R() * 40), 50 + (int)(R() * 25), 40, 0.35f));
-                    for (int i = 0; i < 40; i++) c.Walk(6, () => J(40, 40), 0.8f, C(200, 90, 90, 0.25f));
+                    c.Vessels(10, 160, 1.4f, C(95, 22, 22, 0.45f));
                     break;
                 case "tumor":
                     c.Fill(H(0xd9a23a));
@@ -99,13 +122,14 @@ namespace LPNVR
                 case "colon":
                     c.Fill(H(0xc98a78));
                     for (int i = 0; i < 200; i++) c.Blob(R() * size, R() * size, 10 + R() * 30, C(225, 165, 140, 0.4f));
-                    for (int i = 0; i < 30; i++) c.Walk(5, () => new Vector2((R() - .5f) * 30, 25), 1.5f, C(150, 40, 60, 0.45f));
+                    for (int i = 0; i < 14; i++) c.Vessel(R() * size, R() * size, Mathf.PI / 2 + (R() - .5f) * 0.6f, 140, 1.8f, C(150, 40, 60, 0.5f)); // vasa recta
                     for (int i = 0; i < 20; i++) c.Blob(R() * size, R() * size, 14, C(240, 200, 90, 0.6f)); // epiploik apendiksler
                     break;
                 case "peritoneum":
                     c.Fill(H(0xd9a59a));
                     for (int i = 0; i < 150; i++) c.Blob(R() * size, R() * size, 15 + R() * 40, C(240, 200, 120, 0.35f));
-                    for (int i = 0; i < 25; i++) c.Walk(10, () => J(50, 50), 1, C(160, 40, 50, 0.4f));
+                    c.Vessels(9, 320, 2.0f, C(170, 35, 40, 0.6f));
+                    c.Vessels(25, 90, 0.9f, C(190, 60, 60, 0.4f)); // kapiller ağ
                     break;
                 case "muscle":
                     c.Fill(H(0x9c3a33));
@@ -131,7 +155,8 @@ namespace LPNVR
                 case "wall":
                     c.Fill(H(0xc47b72));
                     for (int i = 0; i < 300; i++) c.Blob(R() * size, R() * size, 10 + R() * 30, C(220, 150, 140, 0.35f));
-                    for (int i = 0; i < 40; i++) c.Walk(10, () => J(40, 40), 1.2f, C(140, 30, 40, 0.45f));
+                    c.Vessels(8, 300, 2.2f, C(150, 30, 40, 0.55f));
+                    c.Vessels(20, 100, 1.0f, C(170, 50, 55, 0.35f));
                     break;
                 default:
                     c.Fill(Color.white);
