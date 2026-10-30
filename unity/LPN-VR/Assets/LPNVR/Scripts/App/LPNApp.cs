@@ -287,6 +287,8 @@ namespace LPNVR
             ui.atlas.go.SetActive(m == "atlas");
             ui.info.go.SetActive(m == "surgery");
             foreach (var i in instr.Values) i.root.gameObject.SetActive(m == "surgery");
+            atlasLabels?.SetActive(m == "atlas");
+            surgLabels?.SetActive(m == "surgery");
             if (m == "atlas") { ApplyAtlasVis(); PlaceAtlas(); }
             if (m == "surgery")
             {

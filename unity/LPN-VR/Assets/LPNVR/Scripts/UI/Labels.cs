@@ -42,6 +42,7 @@ namespace LPNVR
                 var ol = bg.gameObject.AddComponent<Outline>(); ol.effectColor = VRPanel.Accent; ol.effectDistance = new Vector2(3, -3);
                 VRPanel.Stretch(t.rectTransform);
                 U.SetLayer(go, layer);
+                rt.localScale = Vector3.one * scale; // Update çalışmadan önce de dev (piksel = metre) tuval olmasın
                 it.text = rt;
 
                 var lgo = U.Group("line", worldRoot); lgo.layer = layer;
@@ -53,6 +54,8 @@ namespace LPNVR
         }
 
         public void SetAll(bool v) { on = v; Apply(); }
+        // Etiket kümesi bu modda kullanılmıyorsa tümünü (metin, çizgi) gizle
+        public void SetActive(bool v) => worldRoot.gameObject.SetActive(v);
         public void SetVisible(Item it, bool v) { it.visible = v; }
         public void Apply()
         {

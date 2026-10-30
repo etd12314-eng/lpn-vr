@@ -185,10 +185,9 @@ namespace LPNVR
                     break;
                 case "drape": // cerrahi örtü: ince dokuma + geniş kıvrımlar
                     c.Fill(H(0x3d7a9c));
-                    for (int y = 0; y < size; y += 2) c.Row(y, 1, C(50, 110, 150, 0.25f));
-                    for (int x = 0; x < size; x += 2) c.Col(x, 1, C(40, 95, 135, 0.2f));
-                    for (int i = 0; i < 40; i++) c.Blob(R() * size, R() * size, size * (0.1f + R() * 0.12f), C(40, 90, 125, 0.08f)); // hafif kıvrım gölgeleri
-                    for (int i = 0; i < 30; i++) c.Blob(R() * size, R() * size, size * (0.08f + R() * 0.1f), C(85, 145, 180, 0.07f));
+                    for (int y = 0; y < size; y += 2) c.Row(y, 1, C(55, 115, 150, 0.08f));
+                    for (int x = 0; x < size; x += 2) c.Col(x, 1, C(45, 100, 135, 0.07f));
+                    for (int i = 0; i < 25; i++) c.Blob(R() * size, R() * size, size * (0.12f + R() * 0.12f), C(45, 95, 128, 0.05f)); // hafif kıvrım gölgeleri
                     break;
                 case "steel": // fırçalanmış paslanmaz çelik
                     c.Fill(H(0xb4b9be));
