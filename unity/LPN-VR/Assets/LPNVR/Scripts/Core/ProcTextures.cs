@@ -86,6 +86,12 @@ namespace LPNVR
                 for (int i = 0; i < count; i++) Vessel(U.Rand() * S, U.Rand() * S, U.Rand() * Mathf.PI * 2, len * (0.6f + U.Rand() * 0.8f), w, c);
             }
 
+            public void Col(int x, int w, Color c)
+            {
+                for (int xx = x; xx < Mathf.Min(S, x + w); xx++)
+                    for (int y = 0; y < S; y++) Blend(xx, y, c, c.a);
+            }
+
             public void Row(int y, int h, Color c)
             {
                 for (int yy = y; yy < Mathf.Min(S, y + h); yy++)
@@ -159,6 +165,39 @@ namespace LPNVR
                     c.Vessels(8, 300, 2.2f, C(150, 30, 40, 0.55f));
                     c.Vessels(20, 100, 1.0f, C(170, 50, 55, 0.35f));
                     break;
+                // ---- ameliyathane yüzeyleri
+                case "floor": // epoksi/terrazzo zemin, 2x2 karo derzi
+                    c.Fill(H(0x8f9c9a));
+                    for (int i = 0; i < 2600; i++) { float g = 0.45f + R() * 0.5f; c.Blob(R() * size, R() * size, 1 + R() * 3, new Color(g, g * 1.02f, g, 0.5f)); }
+                    for (int i = 0; i < 40; i++) c.Blob(R() * size, R() * size, 30 + R() * 60, C(150, 165, 160, 0.12f));
+                    for (int k = 0; k < 2; k++) { c.Row(k * size / 2, 2, C(70, 80, 80, 0.7f)); c.Col(k * size / 2, 2, C(70, 80, 80, 0.7f)); }
+                    break;
+                case "panel": // hijyenik duvar paneli (açık mint), panel derzleri
+                    c.Fill(H(0xc6d9d3));
+                    for (int i = 0; i < 300; i++) c.Blob(R() * size, R() * size, 10 + R() * 40, C(210, 225, 220, 0.12f));
+                    c.Col(0, 3, C(120, 140, 135, 0.8f)); c.Col(size / 2, 3, C(120, 140, 135, 0.8f));
+                    c.Row(size / 3, 2, C(140, 160, 155, 0.6f));
+                    break;
+                case "ceiling": // asma tavan karoları
+                    c.Fill(H(0xe6eaea));
+                    for (int i = 0; i < 1500; i++) c.Blob(R() * size, R() * size, 1 + R() * 2, C(200, 205, 205, 0.4f));
+                    for (int k = 0; k < 4; k++) { c.Row(k * size / 4, 2, C(170, 175, 178, 0.9f)); c.Col(k * size / 4, 2, C(170, 175, 178, 0.9f)); }
+                    break;
+                case "drape": // cerrahi örtü: ince dokuma + geniş kıvrımlar
+                    c.Fill(H(0x3b7ea8));
+                    for (int y = 0; y < size; y += 2) c.Row(y, 1, C(50, 110, 150, 0.25f));
+                    for (int x = 0; x < size; x += 2) c.Col(x, 1, C(40, 95, 135, 0.2f));
+                    for (int i = 0; i < 70; i++) c.Blob(R() * size, R() * size, size * (0.06f + R() * 0.1f), C(28, 75, 110, 0.22f)); // kıvrım gölgeleri
+                    for (int i = 0; i < 50; i++) c.Blob(R() * size, R() * size, size * (0.04f + R() * 0.08f), C(95, 155, 195, 0.18f));
+                    break;
+                case "steel": // fırçalanmış paslanmaz çelik
+                    c.Fill(H(0xb4b9be));
+                    for (int y = 0; y < size; y++) { float g = (R() - 0.5f) * 0.12f; c.Row(y, 1, new Color(0.7f + g, 0.72f + g, 0.75f + g, 0.35f)); }
+                    break;
+                case "mattress": // masa minderi (vinil)
+                    c.Fill(H(0x2c3440));
+                    for (int i = 0; i < 400; i++) c.Blob(R() * size, R() * size, 4 + R() * 12, C(55, 62, 75, 0.25f));
+                    break;
                 default:
                     c.Fill(Color.white);
                     break;
@@ -189,6 +228,11 @@ namespace LPNVR
                 case "muscle": blur = 1; micro = 0.1f; break;
                 case "vein": case "artery": blur = 2; micro = 0.04f; break;
                 case "wall": blur = 2; micro = 0.08f; break;
+                case "floor": blur = 1; micro = 0.15f; break;
+                case "panel": case "ceiling": blur = 1; micro = 0.04f; break;
+                case "drape": blur = 2; micro = 0.1f; break;
+                case "steel": blur = 0; micro = 0.05f; break;
+                case "mattress": blur = 2; micro = 0.1f; break;
             }
             for (int i = 0; i < h.Length; i++) { var p = c.px[i]; h[i] = (0.3f * p.r + 0.59f * p.g + 0.11f * p.b) * sign; }
             for (int pass = 0; pass < blur; pass++) h = BoxBlur(h, S);

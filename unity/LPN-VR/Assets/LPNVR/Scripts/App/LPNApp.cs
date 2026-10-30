@@ -94,7 +94,7 @@ namespace LPNVR
             camGo.transform.SetParent(rig, false);
             mainCam = camGo.AddComponent<Camera>();
             mainCam.nearClipPlane = 0.01f; mainCam.farClipPlane = 50;
-            mainCam.clearFlags = CameraClearFlags.SolidColor; mainCam.backgroundColor = Hex(0x1d2a31);
+            mainCam.clearFlags = CameraClearFlags.SolidColor; mainCam.backgroundColor = Hex(0xcfd6d8);
             mainCam.cullingMask = ~(1 << LAYER_LAP);
             camGo.AddComponent<AudioListener>();
             if (xrActive)
@@ -224,11 +224,12 @@ namespace LPNVR
             {
                 // Ameliyathane: yarıküre (1.6) + yönlü ışık (1.5), konum (1, 3, 2)
                 Shader.SetGlobalVector("_LpnLightPos", Vector4.zero);
-                Shader.SetGlobalVector("_LpnLightDir", -SW(V(1, 3, 2)).N());
-                Shader.SetGlobalVector("_LpnLightColor", Color.white * 1.5f);
+                // laminer akım tavanından aşağı inen ılık-beyaz ışık + açık renkli duvar/zeminden yansıyan ortam ışığı
+                Shader.SetGlobalVector("_LpnLightDir", -SW(V(0.35f, 3, 0.9f)).N());
+                Shader.SetGlobalVector("_LpnLightColor", Hex(0xfff6ea).linear * 1.7f);
                 Shader.SetGlobalVector("_LpnSpot", Vector4.zero);
-                Shader.SetGlobalVector("_LpnSky", Color.white * 1.6f);
-                Shader.SetGlobalVector("_LpnGround", Hex(0x445566).linear * 1.6f);
+                Shader.SetGlobalVector("_LpnSky", Hex(0xf1f5f7).linear * 1.15f);
+                Shader.SetGlobalVector("_LpnGround", Hex(0x6b7276).linear * 0.9f);
                 Shader.SetGlobalFloat("_LpnExposure", 1.0f);
             }
         }

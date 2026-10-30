@@ -19,6 +19,7 @@ namespace LPNVR
         // Gerçekçi doku görünümü (boşsa doku türünden otomatik — bkz. Mats.Look)
         public float? wet, wetRough, bump, cavity;
         public Color? sss;
+        public Vector2 mapScale = Vector2.one;
     }
 
     // Doku türüne göre ıslak film / yüzey altı saçılma / kabartma varsayılanları
@@ -133,6 +134,13 @@ namespace LPNVR
             ["artery"] = new TissueLook(0.8f, 0.09f, 0.5f, 0.10f, new Color(0.50f, 0.28f, 0.22f)),
             ["organ"] = new TissueLook(0.85f, 0.09f, 0.7f, 0.15f, new Color(0.50f, 0.24f, 0.20f)),
             ["wall"] = new TissueLook(0.8f, 0.10f, 0.4f, 0.25f, new Color(0.50f, 0.28f, 0.22f)),
+            // ameliyathane yüzeyleri (saçılma yok; "ıslak" = cila/vernik parlaklığı)
+            ["floor"] = new TissueLook(0.55f, 0.16f, 0.35f, 0.25f, Color.black),
+            ["panel"] = new TissueLook(0.25f, 0.25f, 0.5f, 0.3f, Color.black),
+            ["ceiling"] = new TissueLook(0f, 0.3f, 0.4f, 0.2f, Color.black),
+            ["drape"] = new TissueLook(0f, 0.3f, 1.6f, 0.45f, new Color(0.15f, 0.12f, 0.1f)),
+            ["steel"] = new TissueLook(0.3f, 0.12f, 0.25f, 0.1f, Color.black),
+            ["mattress"] = new TissueLook(0.35f, 0.2f, 0.6f, 0.2f, Color.black),
         };
 
         static Texture2D _black;
@@ -194,7 +202,7 @@ namespace LPNVR
             m.SetVector("_Crater", Vector4.zero);
             m.SetVector("_PlaneCut", Vector4.zero);
             m.SetVector("_Ellip", Vector4.one);
-            m.SetVector("_MapScale", new Vector4(1, 1, 0, 0));
+            m.SetVector("_MapScale", new Vector4(o.mapScale.x, o.mapScale.y, 0, 0));
             return m;
         }
         public static Material Std(uint color, float roughness = 0.4f, float metallic = 0, Texture tex = null, Side side = Side.Front)
