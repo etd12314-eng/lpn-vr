@@ -16,6 +16,16 @@ namespace LPNVR
         public Side side = Side.Front;
         public bool transparent;
         public bool depthWrite = true;
+        // Gerçekçi doku görünümü (boşsa doku türünden otomatik — bkz. Mats.Look)
+        public float? wet, wetRough, bump, cavity;
+        public Color? sss;
+    }
+
+    // Doku türüne göre ıslak film / yüzey altı saçılma / kabartma varsayılanları
+    public struct TissueLook
+    {
+        public float wet, wetRough, bump, cavity; public Color sss;
+        public TissueLook(float wet, float wetRough, float bump, float cavity, Color sss) { this.wet = wet; this.wetRough = wetRough; this.bump = bump; this.cavity = cavity; this.sss = sss; }
     }
 
     // Doku materyali + nesne-uzayı durum (delikler, alet uçları, krater, renk tonu)
@@ -110,10 +120,54 @@ namespace LPNVR
             return new Vector4(c.r, c.g, c.b, a);
         }
 
+        // Islak film (wet, wetRough), kabartma gücü, girinti kararması, kanal başına saçılma sarması (R > G > B)
+        public static readonly Dictionary<string, TissueLook> Looks = new Dictionary<string, TissueLook>
+        {
+            ["fat"] = new TissueLook(0.9f, 0.10f, 2.2f, 0.35f, new Color(0.60f, 0.42f, 0.18f)),
+            ["kidney"] = new TissueLook(0.85f, 0.09f, 0.7f, 0.15f, new Color(0.55f, 0.22f, 0.16f)),
+            ["tumor"] = new TissueLook(0.6f, 0.14f, 2.0f, 0.30f, new Color(0.50f, 0.32f, 0.14f)),
+            ["colon"] = new TissueLook(0.95f, 0.08f, 1.4f, 0.25f, new Color(0.50f, 0.28f, 0.22f)),
+            ["peritoneum"] = new TissueLook(1.0f, 0.06f, 0.9f, 0.15f, new Color(0.45f, 0.30f, 0.22f)),
+            ["muscle"] = new TissueLook(0.6f, 0.14f, 1.6f, 0.30f, new Color(0.45f, 0.18f, 0.14f)),
+            ["vein"] = new TissueLook(0.9f, 0.07f, 0.35f, 0.10f, new Color(0.30f, 0.18f, 0.32f)),
+            ["artery"] = new TissueLook(0.8f, 0.09f, 0.5f, 0.10f, new Color(0.50f, 0.28f, 0.22f)),
+            ["organ"] = new TissueLook(0.85f, 0.09f, 0.7f, 0.15f, new Color(0.50f, 0.24f, 0.20f)),
+            ["wall"] = new TissueLook(0.8f, 0.10f, 1.0f, 0.25f, new Color(0.50f, 0.28f, 0.22f)),
+        };
+
+        static Texture2D _black;
+        static Texture2D Black
+        {
+            get
+            {
+                if (_black) return _black;
+                _black = new Texture2D(2, 2, TextureFormat.R8, false, true);
+                _black.SetPixels32(new Color32[] { default, default, default, default }); _black.Apply();
+                return _black;
+            }
+        }
+
+        static void ApplyLook(Material m, MatOpts o)
+        {
+            string kind = o.tex && o.tex.name.StartsWith("tex-") ? o.tex.name.Substring(4) : null;
+            var look = kind != null && Looks.TryGetValue(kind, out var l) ? l : new TissueLook(0, 0.1f, 0, 0, Color.black);
+            Texture2D hm = null;
+            if (kind != null) ProcTextures.Heights.TryGetValue(kind, out hm);
+            float bump = o.bump ?? look.bump;
+            m.SetTexture("_HeightMap", hm ? hm : Black);
+            m.SetFloat("_BumpScale", hm ? bump : 0);
+            m.SetFloat("_Wet", o.wet ?? look.wet);
+            m.SetFloat("_WetRough", o.wetRough ?? look.wetRough);
+            m.SetFloat("_Cavity", hm ? (o.cavity ?? look.cavity) : 0);
+            var sss = o.sss ?? look.sss;
+            m.SetVector("_SSS", new Vector4(sss.r, sss.g, sss.b, 0));
+        }
+
         public static Material Std(MatOpts o)
         {
             var m = new Material(TissueShader);
             m.SetTexture("_BaseMap", o.tex ? o.tex : White);
+            ApplyLook(m, o);
             m.SetVector("_Color", Lin(o.color, o.opacity));
             m.SetVector("_Emission", Lin(o.emissive));
             m.SetFloat("_Roughness", o.roughness);

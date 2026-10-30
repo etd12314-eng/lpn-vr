@@ -72,4 +72,79 @@ float3 LpnShade(float3 albedo, float metallic, float roughness, float3 N, float3
     return col;
 }
 
+// ---------------------------------------------------------------------------------------------
+// Gerçekçi doku modeli (laparoskopik görünüm):
+//  * yüzey altı saçılma: kanal başına "sarmalı" Lambert (kırmızı ışık dokuda daha uzağa yayılır →
+//    gölge sınırı kırmızıya kayar, sert gölgeler yumuşar)
+//  * ıslak film: kabartmasız (makro) normalle çok düşük pürüzlülüklü ikinci GGX lobu, F0 = 0.02 (su);
+//    eksenel skop ışığında tipik parlak yansıma noktaları
+//  * girinti kararması (cavity): yükseklik haritasının çukurları ortam ışığını daha az alır
+float LpnGGX(float3 N, float3 L, float3 V, float rough, out float dotNL)
+{
+    rough = clamp(rough, 0.03, 1.0);
+    float alpha = rough * rough, a2 = alpha * alpha;
+    float3 H = normalize(L + V);
+    dotNL = saturate(dot(N, L));
+    float dotNV = saturate(dot(N, V)), dotNH = saturate(dot(N, H));
+    float gv = dotNL * sqrt(a2 + (1.0 - a2) * dotNV * dotNV);
+    float gl = dotNV * sqrt(a2 + (1.0 - a2) * dotNL * dotNL);
+    float Vis = 0.5 / max(gv + gl, 1e-6);
+    float den = dotNH * dotNH * (a2 - 1.0) + 1.0;
+    return a2 / (LPN_PI * den * den) * Vis;
+}
+
+float LpnSchlick(float f0, float3 V, float3 L)
+{
+    float dotVH = saturate(dot(V, normalize(L + V)));
+    return f0 + (1.0 - f0) * exp2((-5.55473 * dotVH - 6.98316) * dotVH);
+}
+
+void LpnLight(float3 posWS, out float3 L, out float atten)
+{
+    atten = 1.0;
+    if (_LpnLightPos.w < 0.5) { L = -normalize(_LpnLightDir.xyz); return; }
+    float3 toL = _LpnLightPos.xyz - posWS;
+    float d = length(toL);
+    L = toL / max(d, 1e-5);
+    float falloff = 1.0 / max(pow(d, _LpnSpot.w), 0.01);
+    if (_LpnSpot.x > 0) { float r = saturate(1.0 - pow(d / _LpnSpot.x, 4.0)); falloff *= r * r; }
+    atten = falloff * smoothstep(_LpnSpot.y, _LpnSpot.z, dot(-L, normalize(_LpnLightDir.xyz)));
+}
+
+// N: kabartmalı normal, Nm: makro (geometrik) normal, sss: kanal başına sarma (0..1), ao: girinti
+float3 LpnShadeTissue(float3 albedo, float metallic, float roughness, float3 N, float3 Nm, float3 posWS, float3 V,
+                      float wet, float wetRough, float3 sss, float ao)
+{
+    float3 L; float atten;
+    LpnLight(posWS, L, atten);
+    float3 lightC = _LpnLightColor.rgb * atten;
+
+    // difüz + saçılma (enerji ~korunumlu sarma: (n·l + w) / (1 + w)^2)
+    float nl = dot(N, L);
+    float3 w = sss;
+    float3 diff = saturate((nl + w) / ((1.0 + w) * (1.0 + w)));
+    float3 diffuseColor = albedo * (1.0 - metallic);
+
+    // taban spekular (doku: F0 0.028)
+    float dotNL;
+    float D = LpnGGX(N, L, V, roughness, dotNL);
+    float3 f0 = lerp(float3(0.028, 0.028, 0.028), albedo, metallic);
+    float fr = LpnSchlick(0.0, V, L);
+    float3 F = f0 + (1.0 - f0) * fr;
+    float3 spec = F * D * dotNL;
+
+    // ıslak film
+    float3 Nw = normalize(lerp(N, Nm, 0.65));
+    float dotWL;
+    float Dw = LpnGGX(Nw, L, V, wetRough, dotWL);
+    float Fw = LpnSchlick(0.02, V, L);
+    float wetSpec = wet * Fw * Dw * dotWL;
+
+    float3 hemi = lerp(_LpnGround.rgb, _LpnSky.rgb, 0.5 * N.y + 0.5) * ao;
+    // ıslak film altındaki difüz hafifçe azalır (filmden yansıyan pay)
+    float3 col = (diff * lightC + hemi) * diffuseColor / LPN_PI * (1.0 - 0.04 * wet)
+               + lightC * (spec + wetSpec);
+    return col;
+}
+
 #endif

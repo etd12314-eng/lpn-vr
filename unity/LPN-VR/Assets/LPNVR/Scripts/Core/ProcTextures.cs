@@ -140,7 +140,62 @@ namespace LPNVR
             var t = new Texture2D(size, size, TextureFormat.RGBA32, true, false) { name = "tex-" + kind, wrapMode = TextureWrapMode.Repeat, anisoLevel = 4, filterMode = FilterMode.Trilinear };
             t.SetPixels(c.px);
             t.Apply(true, true);
+            Heights[kind] = MakeHeight(kind, c);
             return t;
+        }
+
+        // Yükseklik haritası (kabartma için): renk dokusunun parlaklığından türetilir (doku türüne göre işaret/
+        // yumuşatma) + ince mikro-pürüz. Tissue shader'ı bunu türevlerle normal sapmasına çevirir.
+        public static readonly System.Collections.Generic.Dictionary<string, Texture2D> Heights = new System.Collections.Generic.Dictionary<string, Texture2D>();
+
+        static Texture2D MakeHeight(string kind, Canvas c)
+        {
+            int S = c.S;
+            var h = new float[S * S];
+            float sign = 1, micro = 0.08f; int blur = 2;
+            switch (kind)
+            {
+                case "fat": blur = 3; micro = 0.05f; break;          // parlak lobüller kabarık, septalar çukur
+                case "kidney": sign = 1; blur = 2; micro = 0.12f; break;
+                case "tumor": blur = 3; micro = 0.1f; break;
+                case "colon": blur = 3; micro = 0.06f; break;
+                case "peritoneum": sign = -1; blur = 1; micro = 0.05f; break; // koyu damarlar hafif kabarık
+                case "muscle": blur = 1; micro = 0.1f; break;
+                case "vein": case "artery": blur = 2; micro = 0.04f; break;
+                case "wall": blur = 2; micro = 0.08f; break;
+            }
+            for (int i = 0; i < h.Length; i++) { var p = c.px[i]; h[i] = (0.3f * p.r + 0.59f * p.g + 0.11f * p.b) * sign; }
+            for (int pass = 0; pass < blur; pass++) h = BoxBlur(h, S);
+            float mn = float.MaxValue, mx = float.MinValue;
+            foreach (var v in h) { mn = Mathf.Min(mn, v); mx = Mathf.Max(mx, v); }
+            float inv = 1f / Mathf.Max(1e-5f, mx - mn);
+            var px = new Color32[S * S];
+            var rnd = new System.Random(7919 + kind.Length * 31 + kind[0]); // U.Rand dizisini (anatomi) bozmamak için ayrı üreteç
+            for (int i = 0; i < h.Length; i++)
+            {
+                float v = (h[i] - mn) * inv * (1 - micro) + (float)rnd.NextDouble() * micro;
+                byte b = (byte)Mathf.Clamp(Mathf.RoundToInt(v * 255), 0, 255);
+                px[i] = new Color32(b, b, b, 255);
+            }
+            var t = new Texture2D(S, S, TextureFormat.R8, true, true) { name = "height-" + kind, wrapMode = TextureWrapMode.Repeat, anisoLevel = 4, filterMode = FilterMode.Trilinear };
+            t.SetPixels32(px);
+            t.Apply(true, true);
+            return t;
+        }
+
+        static float[] BoxBlur(float[] a, int S)
+        {
+            var o = new float[a.Length];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float sum = 0;
+                    for (int dy = -1; dy <= 1; dy++)
+                        for (int dx = -1; dx <= 1; dx++)
+                            sum += a[((y + dy + S) % S) * S + (x + dx + S) % S];
+                    o[y * S + x] = sum / 9f;
+                }
+            return o;
         }
     }
 }

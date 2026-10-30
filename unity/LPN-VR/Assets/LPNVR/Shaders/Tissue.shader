@@ -13,6 +13,12 @@ Shader "LPN/Tissue"
         _Roughness ("Pürüzlülük", Range(0,1)) = 0.4
         _Metallic ("Metaliklik", Range(0,1)) = 0
         _MapScale ("Doku ölçeği", Vector) = (1,1,0,0)
+        _HeightMap ("Yükseklik", 2D) = "black" {}
+        _BumpScale ("Kabartma", Float) = 0
+        _Wet ("Islak film", Range(0,1)) = 0
+        _WetRough ("Film pürüzlülüğü", Range(0.02,0.5)) = 0.1
+        _Cavity ("Girinti kararması", Range(0,1)) = 0
+        _SSS ("Saçılma sarması (rgb)", Vector) = (0,0,0,0)
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 2
         [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src", Float) = 1
         [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst", Float) = 0
@@ -40,8 +46,10 @@ Shader "LPN/Tissue"
             #define MAX_HOLES 128
 
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
-            float4 _Color, _Emission, _MapScale;
-            float _Roughness, _Metallic;
+            TEXTURE2D(_HeightMap); SAMPLER(sampler_HeightMap);
+            float4 _HeightMap_TexelSize;
+            float4 _Color, _Emission, _MapScale, _SSS;
+            float _Roughness, _Metallic, _BumpScale, _Wet, _WetRough, _Cavity;
             // Doku etkileşim durumu (TissueMat.cs her kare/olayda ayarlar; nesne uzayında)
             float4 _Tips[2];       // xyz uç, w aktif
             float _Sigma, _Deform;
@@ -127,9 +135,28 @@ Shader "LPN/Tissue"
                 float4 tex = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, i.uv);
                 float3 albedo = tex.rgb * _Color.rgb * _Tint.rgb;
                 albedo *= lerp(0.25, 1.0, smoothstep(0.0, 0.0018, edge));
-                float3 N = normalize(i.nWS) * IS_FRONT_VFACE(face, 1.0, -1.0);
+                float3 Nm = normalize(i.nWS) * IS_FRONT_VFACE(face, 1.0, -1.0);
                 float3 V = normalize(GetCameraPositionWS() - i.posWS);
-                float3 col = LpnShade(albedo, _Metallic, _Roughness, N, i.posWS, V) + _Emission.rgb;
+                float3 N = Nm; float ao = 1.0;
+                if (_BumpScale > 0.0)
+                {
+                    // Teğetsiz kabartma (türev tabanlı eş-teğet çerçeve): uv yönleri ekran türevlerinden
+                    float2 e = _HeightMap_TexelSize.xy * 1.5;
+                    float h0 = SAMPLE_TEXTURE2D(_HeightMap, sampler_HeightMap, i.uv).r;
+                    float hu = SAMPLE_TEXTURE2D(_HeightMap, sampler_HeightMap, i.uv + float2(e.x, 0)).r;
+                    float hv = SAMPLE_TEXTURE2D(_HeightMap, sampler_HeightMap, i.uv + float2(0, e.y)).r;
+                    float3 dp1 = ddx(i.posWS), dp2 = ddy(i.posWS);
+                    float2 duv1 = ddx(i.uv), duv2 = ddy(i.uv);
+                    float3 dp2perp = cross(dp2, Nm), dp1perp = cross(Nm, dp1);
+                    float3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+                    float3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+                    float invmax = rsqrt(max(max(dot(T, T), dot(B, B)), 1e-20));
+                    float2 g = float2(hu - h0, hv - h0) * _BumpScale * 6.0;
+                    N = normalize(Nm - (g.x * T + g.y * B) * invmax);
+                    ao = lerp(1.0 - _Cavity, 1.0, smoothstep(0.15, 0.75, h0));
+                }
+                albedo *= lerp(1.0, ao, 0.5);
+                float3 col = LpnShadeTissue(albedo, _Metallic, _Roughness, N, Nm, i.posWS, V, _Wet, _WetRough, _SSS.rgb, ao) + _Emission.rgb;
                 return half4(LpnACES(col), _Color.a * tex.a);
             }
             ENDHLSL
