@@ -86,6 +86,14 @@ namespace LPNVR.EditorTools
             mainCam.transform.position = new Vector3(1.8f, 2.6f, -1.6f);
             mainCam.transform.LookAt(A.root.position);
             Render(mainCam, "08_far", 1280, 720);
+            var top = GameObject.Find("tableTop");
+            if (top) Log($"tableTop viewport={mainCam.WorldToViewportPoint(top.transform.position)} camPos={mainCam.transform.position} camFwd={mainCam.transform.forward} parent={mainCam.transform.parent?.name} stereo={mainCam.stereoEnabled} targetEye={mainCam.stereoTargetEye}");
+            // aynı pozdan laparoskop kamerasıyla (ana kamera ayarı mı, sahne mi?)
+            float lf = lapCam.farClipPlane, ln = lapCam.nearClipPlane; int lm = lapCam.cullingMask;
+            lapCam.transform.SetPositionAndRotation(mainCam.transform.position, mainCam.transform.rotation);
+            lapCam.farClipPlane = 50; lapCam.nearClipPlane = 0.01f; lapCam.cullingMask = mainCam.cullingMask;
+            Render(lapCam, "09_far_lapcam", 1280, 720);
+            lapCam.farClipPlane = lf; lapCam.nearClipPlane = ln; lapCam.cullingMask = lm;
             foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None).Where(r => r.gameObject.layer == 0 && r.enabled && r.gameObject.activeInHierarchy).OrderByDescending(r => r.bounds.size.magnitude).Take(8))
                 Log($"oda nesnesi {r.name} merkez={r.bounds.center} boyut={r.bounds.size} mat={r.sharedMaterial?.shader?.name}");
             Log($"mainCam near={mainCam.nearClipPlane} far={mainCam.farClipPlane} mask={mainCam.cullingMask} R.root={Get<Room>(app, "R").root.position} patient={A.root.position}");

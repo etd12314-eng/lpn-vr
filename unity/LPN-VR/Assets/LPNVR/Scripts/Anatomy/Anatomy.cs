@@ -357,7 +357,7 @@ namespace LPNVR
             midFat.transform.localPosition = V(-0.006f, -0.04f, 0.034f); Add(midFat, "fat"); meshes["midFat"] = midFat;
 
             // ------------------------------------------------------------------ GİS organları
-            var spleen = Mesh("spleen", Geo.Ellipsoid(0.035f, 0.06f, 0.02f, 40, 0.04f), Std(0xa0405a, 0.3f, tex["organ"]));
+            var spleen = Mesh("spleen", Geo.Ellipsoid(0.035f, 0.06f, 0.02f, 40, 0.04f), Std(0xd8607e, 0.3f, tex["organ"]));
             spleen.transform.localPosition = V(0.103f, 0.1f, -0.012f); spleen.transform.localRotation = EulerXYZ(0.5f, 0.6f, -0.35f);
             Add(spleen, "gi"); Label("Dalak (Splen)", V(0.11f, 0.11f, 0.012f), "gi");
             panc = Mesh("panc", Geo.TaperTube(L(V(-0.035f, -0.005f, 0.075f), V(0.0f, 0.02f, 0.085f), V(0.04f, 0.04f, 0.066f), V(0.075f, 0.065f, 0.036f), V(0.09f, 0.08f, 0.018f)), t => 0.014f - 0.005f * t, 48, 14), Std(0xf6d6a8, 0.55f, tex["fat"]));
