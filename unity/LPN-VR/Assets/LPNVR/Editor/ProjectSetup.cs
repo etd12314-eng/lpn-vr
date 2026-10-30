@@ -219,6 +219,9 @@ namespace LPNVR.EditorTools
         // açılınca derleme tanımlarına yansır; aynı oturumda derlenirse Editor ile oyuncu sınıf düzeni uyuşmaz.
         //   1) Unity -batchmode -quit -buildTarget Android -executeMethod LPNVR.EditorTools.ProjectSetup.SetupCI
         //   2) Unity -batchmode -quit -buildTarget Android -executeMethod LPNVR.EditorTools.ProjectSetup.BuildCI [-customBuildPath yol.apk]
+        // CI: kurulum + ekran görüntüleri (Shots/*.png)
+        public static void ShotsCI() { Configure(); Shots.Run(); }
+
         public static void SetupCI()
         {
             Configure();
