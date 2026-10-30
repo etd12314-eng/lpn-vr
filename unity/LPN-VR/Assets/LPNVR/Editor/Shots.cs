@@ -52,7 +52,8 @@ namespace LPNVR.EditorTools
 
             void Lap(string name, Vector3 focusP, float dist)
             {
-                Set(app, "camTarget", focusP); Set(app, "camOffset", Vector3.zero); Set(app, "camDist", dist);
+                // UpdateLapCam hedefi adım odağı + camOffset'tir
+                Set(app, "camTarget", focusP); Set(app, "camOffset", focusP - proc.Cur.focus.Value); Set(app, "camDist", dist);
                 Call(app, "UpdateLapCam", 30f);
                 Render(lapCam, name, 1280, 720);
             }
@@ -72,10 +73,16 @@ namespace LPNVR.EditorTools
             Lap("04_tumor", tumP, 0.08f);
             Lap("05_kidney", V(0.085f, -0.01f, 0.02f), 0.13f);
             // 6) ameliyathane (baş hizasından)
-            mainCam.transform.position = new Vector3(0.35f, 1.65f, -0.05f);
-            mainCam.transform.LookAt(new Vector3(0.0f, 1.05f, 0.6f));
-            mainCam.fieldOfView = 70;
+            // masaüstü "O" görünümüyle aynı yörünge kamerası
+            var orT = A.root.TransformPoint(V(0.06f, -0.02f, 0.1f));
+            mainCam.transform.position = orT + new Vector3(0, 0.5f, -0.9f);
+            mainCam.transform.LookAt(orT);
             Render(mainCam, "06_room", 1280, 720);
+            // VR başlangıç başı (orijinde ayakta, +Z'ye bakıyor)
+            mainCam.transform.position = new Vector3(0, 1.6f, 0);
+            mainCam.transform.LookAt(new Vector3(0, 1.0f, 0.55f));
+            Render(mainCam, "07_head", 1280, 720);
+            Log($"mainCam near={mainCam.nearClipPlane} far={mainCam.farClipPlane} mask={mainCam.cullingMask} R.root={Get<Room>(app, "R").root.position} patient={A.root.position}");
             Object.DestroyImmediate(go);
             Log("tamam: " + string.Join(", ", Directory.GetFiles(Dir).Select(Path.GetFileName)));
         }
